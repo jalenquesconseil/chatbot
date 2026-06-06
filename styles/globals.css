@@ -90,7 +90,7 @@ button {
   font-weight: 500;
   letter-spacing: 0.3px;
   border: none;
-  border-radius: 4px;
+  border-radius: 2px;
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 0.75rem 1.5rem;
@@ -104,7 +104,7 @@ button:disabled {
 /* Input */
 input, textarea {
   font-family: 'Barlow Condensed', sans-serif;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 2px solid var(--color-gray-light);
   padding: 0.75rem 1rem;
   font-size: 1rem;
