@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
-import { MessageCircle, Send, RotateCcw, Download, Heart } from 'lucide-react';
+import { MessageCircle, Send, RotateCcw, Download, Heart, Mic, MicOff } from 'lucide-react';
 
 export default function ChatbotPage() {
   const [messages, setMessages] = useState([
@@ -23,8 +23,61 @@ export default function ChatbotPage() {
 
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  // Initialiser Web Speech API
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (SpeechRecognition) {
+      setVoiceSupported(true);
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'fr-FR';
+      recognition.continuous = false;
+      recognition.interimResults = true;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        // Mettre à jour l'input avec le texte reconnu
+        if (finalTranscript) {
+          setInputValue(prev => prev + finalTranscript);
+        } else if (interimTranscript) {
+          setInputValue(interimTranscript);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Erreur de reconnaissance vocale:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,6 +86,17 @@ export default function ChatbotPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) return;
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+    }
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -176,7 +240,11 @@ export default function ChatbotPage() {
                     alignItems: 'center',
                     gap: '0.5rem',
                     fontSize: '0.95rem',
-                    fontWeight: 500
+                    fontWeight: 500,
+                    borderRadius: '8px',
+                    padding: '0.75rem 1.5rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.background = '#1D2A84';
@@ -200,7 +268,11 @@ export default function ChatbotPage() {
                     gap: '0.5rem',
                     fontSize: '0.95rem',
                     fontWeight: 500,
-                    border: 'none'
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.75rem 1.5rem',
+                    cursor: 'pointer',
+                    transition: 'background 0.3s ease'
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.background = '#6fa171';
@@ -227,7 +299,7 @@ export default function ChatbotPage() {
           width: '100%'
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {messages.map((msg, idx) => (
+            {messages.map((msg) => (
               <div
                 key={msg.id}
                 style={{
@@ -314,7 +386,7 @@ export default function ChatbotPage() {
           width: '100%'
         }}>
           <form onSubmit={handleSendMessage} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
               <input
                 ref={inputRef}
                 type="text"
@@ -343,6 +415,37 @@ export default function ChatbotPage() {
                   e.target.style.boxShadow = 'none';
                 }}
               />
+
+              {/* Bouton microphone */}
+              {voiceSupported && (
+                <button
+                  type="button"
+                  onClick={toggleVoiceInput}
+                  title={isListening ? "Arrêter l'enregistrement" : "Démarrer la saisie vocale"}
+                  style={{
+                    background: isListening ? '#F0A3B2' : '#A9C8C6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.875rem 1rem',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease',
+                    boxShadow: isListening ? '0 0 12px rgba(240, 163, 178, 0.4)' : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'scale(1.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                >
+                  {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                </button>
+              )}
+
               <button
                 type="submit"
                 disabled={isLoading || !inputValue.trim()}
@@ -383,7 +486,7 @@ export default function ChatbotPage() {
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              💡 <em>Écrivez librement vos réponses. Sophie (directrice) vous répondra naturellement.</em>
+              💡 <em>Écrivez ou parlez librement. Sophie vous répondra naturellement.</em>
             </p>
           </form>
         </div>
