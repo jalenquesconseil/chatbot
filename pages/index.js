@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
-import { MessageCircle, Send, RotateCcw, Download } from 'lucide-react';
+import { MessageCircle, Send, RotateCcw, Download, Heart } from 'lucide-react';
 
 export default function ChatbotPage() {
   const [messages, setMessages] = useState([
@@ -23,7 +23,6 @@ export default function ChatbotPage() {
 
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [collectedData, setCollectedData] = useState({});
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -40,7 +39,6 @@ export default function ChatbotPage() {
 
     if (!inputValue.trim()) return;
 
-    // Ajouter le message utilisateur
     const userMessage = {
       id: messages.length,
       role: 'user',
@@ -52,7 +50,6 @@ export default function ChatbotPage() {
     setIsLoading(true);
 
     try {
-      // Appeler l'API
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,7 +67,6 @@ export default function ChatbotPage() {
 
       const data = await response.json();
 
-      // Ajouter la réponse de Claude
       const assistantMessage = {
         id: messages.length + 1,
         role: 'assistant',
@@ -78,9 +74,6 @@ export default function ChatbotPage() {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
-      // Analyser la réponse pour extraire données RLH (simple parsing)
-      extractRLHData(inputValue, data.message);
     } catch (error) {
       console.error('Error:', error);
       setMessages(prev => [...prev, {
@@ -90,24 +83,6 @@ export default function ChatbotPage() {
       }]);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const extractRLHData = (userInput, aiResponse) => {
-    // Extraction simple des données clés mentionnées dans le dialogue
-    const lowerInput = userInput.toLowerCase();
-
-    if (lowerInput.includes('20') || lowerInput.includes('salariés')) {
-      setCollectedData(prev => ({ ...prev, effectif: '~20 salariés' }));
-    }
-    if (lowerInput.includes('handicap') || lowerInput.includes('emma')) {
-      setCollectedData(prev => ({ ...prev, hasHandicap: true }));
-    }
-    if (lowerInput.includes('14') || lowerInput.includes('heures')) {
-      setCollectedData(prev => ({ ...prev, hours: '14h/semaine' }));
-    }
-    if (lowerInput.includes('tuteur') || lowerInput.includes('tutrice')) {
-      setCollectedData(prev => ({ ...prev, hasTutor: true }));
     }
   };
 
@@ -129,17 +104,16 @@ export default function ChatbotPage() {
         content: 'Bon je vous écoute. On vient tout juste de commencer avec elle, donc... vous pensez qu\'il faut déjà se lancer dans des démarches administratives ?'
       }
     ]);
-    setCollectedData({});
     setInputValue('');
     inputRef.current?.focus();
   };
 
   const handleDownloadTranscript = () => {
     const transcript = messages
-      .map(m => `${m.role === 'user' ? 'Consultant' : 'Sophie'}: ${m.content}`)
+      .map(m => `${m.role === 'user' ? 'Vous' : 'Sophie'}: ${m.content}`)
       .join('\n\n');
 
-    const blob = new Blob([transcript], { type: 'text/plain' });
+    const blob = new Blob([transcript], { type: 'text/plain; charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -152,67 +126,177 @@ export default function ChatbotPage() {
       <Head>
         <title>Entretien RLH Interactif - Fratries</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Head>
 
-      <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200 p-4">
-          <div className="max-w-5xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-600 text-white p-2 rounded-lg">
-                <MessageCircle size={24} />
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'linear-gradient(135deg, #F8F9FA 0%, #E8F4F4 100%)' }}>
+        
+        {/* HEADER */}
+        <header style={{
+          background: 'white',
+          borderBottom: '3px solid #1D2A84',
+          padding: '2rem',
+          boxShadow: '0 4px 16px rgba(29, 42, 132, 0.12)'
+        }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '2rem' }}>
+              {/* Logo & Title */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #1D2A84 0%, #A9C8C6 100%)',
+                  color: 'white',
+                  padding: '1rem',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Heart size={28} fill="white" />
+                </div>
+                <div>
+                  <h1 style={{ fontSize: '1.8rem', color: '#1D2A84', marginBottom: '0.25rem' }}>
+                    Entretien RLH
+                  </h1>
+                  <p style={{ fontSize: '0.9rem', color: '#666', fontStyle: 'italic' }}>
+                    Emma Rousseau — École Notre-Dame des Anges
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-800">Entretien RLH Interactif</h1>
-                <p className="text-sm text-gray-500">Emma Rousseau — École Notre-Dame des Anges</p>
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  onClick={handleDownloadTranscript}
+                  style={{
+                    background: 'white',
+                    color: '#1D2A84',
+                    border: '2px solid #1D2A84',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.95rem',
+                    fontWeight: 500
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#1D2A84';
+                    e.target.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'white';
+                    e.target.style.color = '#1D2A84';
+                  }}
+                >
+                  <Download size={18} />
+                  Télécharger
+                </button>
+                <button
+                  onClick={handleReset}
+                  style={{
+                    background: '#87B280',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.95rem',
+                    fontWeight: 500,
+                    border: 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#6fa171';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#87B280';
+                  }}
+                >
+                  <RotateCcw size={18} />
+                  Recommencer
+                </button>
               </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleDownloadTranscript}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-medium"
-              >
-                <Download size={16} />
-                Télécharger
-              </button>
-              <button
-                onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
-              >
-                <RotateCcw size={16} />
-                Recommencer
-              </button>
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 max-w-5xl mx-auto w-full">
-          <div className="space-y-4">
-            {messages.map((msg) => (
+        {/* MESSAGES AREA */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '2rem',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          width: '100%'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {messages.map((msg, idx) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
+                style={{
+                  display: 'flex',
+                  justifyContent: msg.role === 'assistant' ? 'flex-start' : 'flex-end',
+                  animation: `slideIn${msg.role === 'assistant' ? 'Left' : 'Right'} 0.3s ease`
+                }}
               >
                 <div
-                  className={`max-w-2xl rounded-lg px-4 py-3 ${
-                    msg.role === 'assistant'
-                      ? 'bg-white text-gray-800 shadow-sm border border-gray-200'
-                      : 'bg-blue-600 text-white shadow-sm'
-                  }`}
+                  style={{
+                    maxWidth: '70%',
+                    padding: '1rem 1.5rem',
+                    borderRadius: '16px',
+                    lineHeight: 1.5,
+                    fontSize: '0.95rem',
+                    ...(msg.role === 'assistant'
+                      ? {
+                          background: 'white',
+                          color: '#1D2A84',
+                          boxShadow: '0 2px 8px rgba(29, 42, 132, 0.08)',
+                          borderLeft: '4px solid #87B280'
+                        }
+                      : {
+                          background: 'linear-gradient(135deg, #1D2A84 0%, #2D3A94 100%)',
+                          color: 'white',
+                          boxShadow: '0 2px 8px rgba(29, 42, 132, 0.2)'
+                        }
+                    )
+                  }}
                 >
-                  <p className="text-sm md:text-base leading-relaxed">{msg.content}</p>
+                  {msg.content}
                 </div>
               </div>
             ))}
             {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-white text-gray-800 shadow-sm border border-gray-200 rounded-lg px-4 py-3">
-                  <div className="flex gap-2 items-center">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <div style={{
+                  background: 'white',
+                  padding: '1rem 1.5rem',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  gap: '0.5rem',
+                  alignItems: 'center',
+                  boxShadow: '0 2px 8px rgba(29, 42, 132, 0.08)',
+                  borderLeft: '4px solid #F6BA75'
+                }}>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: '#F6BA75',
+                    animation: 'pulse 1.5s infinite'
+                  }} />
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: '#F6BA75',
+                    animation: 'pulse 1.5s infinite',
+                    animationDelay: '0.2s'
+                  }} />
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: '#F6BA75',
+                    animation: 'pulse 1.5s infinite',
+                    animationDelay: '0.4s'
+                  }} />
                 </div>
               </div>
             )}
@@ -220,30 +304,123 @@ export default function ChatbotPage() {
           </div>
         </div>
 
-        {/* Input */}
-        <div className="border-t border-gray-200 bg-white p-4 max-w-5xl mx-auto w-full">
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Écrivez votre réponse ici..."
-              disabled={isLoading}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 disabled:bg-gray-100"
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !inputValue.trim()}
-              className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition font-medium"
-            >
-              <Send size={18} />
-              <span className="hidden sm:inline">Envoyer</span>
-            </button>
+        {/* INPUT AREA */}
+        <div style={{
+          background: 'white',
+          borderTop: '2px solid #E8EAED',
+          padding: '2rem',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          width: '100%'
+        }}>
+          <form onSubmit={handleSendMessage} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Écrivez votre réponse ici..."
+                disabled={isLoading}
+                style={{
+                  flex: 1,
+                  padding: '0.875rem 1.25rem',
+                  border: '2px solid #E8EAED',
+                  borderRadius: '12px',
+                  fontSize: '0.95rem',
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  transition: 'all 0.3s ease',
+                  background: isLoading ? '#F8F9FA' : 'white'
+                }}
+                onFocus={(e) => {
+                  if (!isLoading) {
+                    e.target.style.borderColor = '#1D2A84';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(29, 42, 132, 0.1)';
+                  }
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#E8EAED';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !inputValue.trim()}
+                style={{
+                  background: isLoading || !inputValue.trim() ? '#CCC' : '#1D2A84',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.875rem 2rem',
+                  borderRadius: '12px',
+                  fontSize: '0.95rem',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: isLoading || !inputValue.trim() ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading && inputValue.trim()) {
+                    e.target.style.background = '#0F1A5C';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isLoading && inputValue.trim()) {
+                    e.target.style.background = '#1D2A84';
+                  }
+                }}
+              >
+                <Send size={20} />
+                <span>Envoyer</span>
+              </button>
+            </div>
+            <p style={{
+              fontSize: '0.85rem',
+              color: '#666',
+              marginLeft: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              💡 <em>Écrivez librement vos réponses. Sophie (directrice) vous répondra naturellement.</em>
+            </p>
           </form>
-          <p className="text-xs text-gray-500 mt-2">💡 Écrivez librement vos réponses. Sophie (directrice) vous répondra naturellement.</p>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.7;
+          }
+        }
+      `}</style>
     </>
   );
 }
