@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     }));
 
     const response = await client.messages.create({
-      model: 'claude-opus-4-20250805',
+      model: 'claude-opus-4-20250514',
       max_tokens: 500,
       system: SYSTEM_PROMPT,
       messages: claudeMessages
