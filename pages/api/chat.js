@@ -1,6 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { SYSTEM_PROMPT } from '@/lib/systemPrompt';
-
+import { SYSTEM_PROMPT } from '../../lib/systemPrompt';
 const client = new Anthropic();
 
 export default async function handler(req, res) {
