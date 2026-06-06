@@ -1,6 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { SYSTEM_PROMPT } from '../../lib/systemPrompt';
-const client = new Anthropic();
+import { SYSTEM_PROMPT } from '../../lib/systemPrompt.js';
+
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
 export default async function handler(req, res) {
   // Accepter seulement POST
