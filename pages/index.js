@@ -3,6 +3,9 @@ import Head from 'next/head';
 import { MessageCircle, Send, RotateCcw, Download, Heart, Mic, MicOff } from 'lucide-react';
 
 export default function ChatbotPage() {
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
   const [messages, setMessages] = useState([
     {
       id: 0,
@@ -25,11 +28,51 @@ export default function ChatbotPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
+
+  // ==========================================
+  // REFS
+  // ==========================================
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const recognitionRef = useRef(null);
+  const headerRef = useRef(null);  // ← AJOUTER CET USEREF POUR LE HEADER
+  let lastScrollY = 0;
 
-  // Initialiser Web Speech API
+  // ==========================================
+  // LOGIQUE HIDE HEADER ON SCROLL
+  // ← AJOUTER CE CODE ICI (avant les autres useEffect)
+  // ==========================================
+  useEffect(() => {
+    const handleScroll = () => {
+      const messagesArea = document.querySelector('[style*="flex: 1"]');
+      
+      if (!messagesArea) return;
+
+      const currentScrollY = messagesArea.scrollTop;
+
+      if (headerRef.current) {
+        if (currentScrollY > lastScrollY && currentScrollY > 50) {
+          // Scroll down & suffisamment loin
+          headerRef.current.classList.add('hide');
+        } else if (currentScrollY < lastScrollY) {
+          // Scroll up
+          headerRef.current.classList.remove('hide');
+        }
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    const messagesArea = document.querySelector('[style*="flex: 1"]');
+    if (messagesArea) {
+      messagesArea.addEventListener('scroll', handleScroll);
+      return () => messagesArea.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
+
+  // ==========================================
+  // AUTRES USEEFFECT (Web Speech API)
+  // ==========================================
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
@@ -58,7 +101,6 @@ export default function ChatbotPage() {
           }
         }
 
-        // Mettre à jour l'input avec le texte reconnu
         if (finalTranscript) {
           setInputValue(prev => prev + finalTranscript);
         } else if (interimTranscript) {
@@ -78,6 +120,10 @@ export default function ChatbotPage() {
       recognitionRef.current = recognition;
     }
   }, []);
+
+  // ==========================================
+  // FONCTIONS
+  // ==========================================
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -185,6 +231,9 @@ export default function ChatbotPage() {
     a.click();
   };
 
+  // ==========================================
+  // RENDER
+  // ==========================================
   return (
     <>
       <Head>
@@ -196,12 +245,13 @@ export default function ChatbotPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'linear-gradient(135deg, #F8F9FA 0%, #E8F4F4 100%)' }}>
         
-        {/* HEADER */}
-        <header style={{
+        {/* HEADER - AJOUTER ref={headerRef} ICI */}
+        <header ref={headerRef} style={{
           background: 'white',
           borderBottom: '3px solid #1D2A84',
           padding: '2rem',
-          boxShadow: '0 4px 16px rgba(29, 42, 132, 0.12)'
+          boxShadow: '0 4px 16px rgba(29, 42, 132, 0.12)',
+          transition: 'all 0.3s ease'
         }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '2rem' }}>
@@ -211,7 +261,7 @@ export default function ChatbotPage() {
                   background: 'linear-gradient(135deg, #1D2A84 0%, #A9C8C6 100%)',
                   color: 'white',
                   padding: '1rem',
-                  borderRadius: '12px',
+                  borderRadius: '0.5rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -241,7 +291,7 @@ export default function ChatbotPage() {
                     gap: '0.5rem',
                     fontSize: '0.95rem',
                     fontWeight: 500,
-                    borderRadius: '8px',
+                    borderRadius: '0.5rem',
                     padding: '0.75rem 1.5rem',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease'
@@ -269,7 +319,7 @@ export default function ChatbotPage() {
                     fontSize: '0.95rem',
                     fontWeight: 500,
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: '0.5rem',
                     padding: '0.75rem 1.5rem',
                     cursor: 'pointer',
                     transition: 'background 0.3s ease'
@@ -299,7 +349,7 @@ export default function ChatbotPage() {
           width: '100%'
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {messages.map((msg) => (
+            {messages.map((msg, idx) => (
               <div
                 key={msg.id}
                 style={{
@@ -312,7 +362,7 @@ export default function ChatbotPage() {
                   style={{
                     maxWidth: '70%',
                     padding: '1rem 1.5rem',
-                    borderRadius: '16px',
+                    borderRadius: '0.5rem',
                     lineHeight: 1.5,
                     fontSize: '0.95rem',
                     ...(msg.role === 'assistant'
@@ -339,7 +389,7 @@ export default function ChatbotPage() {
                 <div style={{
                   background: 'white',
                   padding: '1rem 1.5rem',
-                  borderRadius: '16px',
+                  borderRadius: '0.5rem',
                   display: 'flex',
                   gap: '0.5rem',
                   alignItems: 'center',
@@ -386,7 +436,7 @@ export default function ChatbotPage() {
           width: '100%'
         }}>
           <form onSubmit={handleSendMessage} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '1rem' }}>
               <input
                 ref={inputRef}
                 type="text"
@@ -398,7 +448,7 @@ export default function ChatbotPage() {
                   flex: 1,
                   padding: '0.875rem 1.25rem',
                   border: '2px solid #E8EAED',
-                  borderRadius: '12px',
+                  borderRadius: '0.5rem',
                   fontSize: '0.95rem',
                   fontFamily: "'Barlow Condensed', sans-serif",
                   transition: 'all 0.3s ease',
@@ -415,37 +465,6 @@ export default function ChatbotPage() {
                   e.target.style.boxShadow = 'none';
                 }}
               />
-
-              {/* Bouton microphone */}
-              {voiceSupported && (
-                <button
-                  type="button"
-                  onClick={toggleVoiceInput}
-                  title={isListening ? "Arrêter l'enregistrement" : "Démarrer la saisie vocale"}
-                  style={{
-                    background: isListening ? '#F0A3B2' : '#A9C8C6',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.875rem 1rem',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.3s ease',
-                    boxShadow: isListening ? '0 0 12px rgba(240, 163, 178, 0.4)' : 'none'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'scale(1.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'scale(1)';
-                  }}
-                >
-                  {isListening ? <MicOff size={20} /> : <Mic size={20} />}
-                </button>
-              )}
-
               <button
                 type="submit"
                 disabled={isLoading || !inputValue.trim()}
@@ -454,7 +473,7 @@ export default function ChatbotPage() {
                   color: 'white',
                   border: 'none',
                   padding: '0.875rem 2rem',
-                  borderRadius: '12px',
+                  borderRadius: '0.5rem',
                   fontSize: '0.95rem',
                   fontWeight: 500,
                   display: 'flex',
@@ -486,7 +505,7 @@ export default function ChatbotPage() {
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              💡 <em>Écrivez ou parlez librement. Sophie vous répondra naturellement.</em>
+              💡 <em>Écrivez librement vos réponses. Sophie (directrice) vous répondra naturellement.</em>
             </p>
           </form>
         </div>
