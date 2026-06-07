@@ -90,7 +90,7 @@ button {
   font-weight: 500;
   letter-spacing: 0.3px;
   border: none;
-  border-radius: 2px;
+  border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 0.75rem 1.5rem;
@@ -104,7 +104,7 @@ button:disabled {
 /* Input */
 input, textarea {
   font-family: 'Barlow Condensed', sans-serif;
-  border-radius: 2px;
+  border-radius: 0.5rem;
   border: 2px solid var(--color-gray-light);
   padding: 0.75rem 1rem;
   font-size: 1rem;
@@ -195,6 +195,17 @@ a:focus-visible {
   }
 }
 
+@keyframes slideUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Utility classes */
 .text-center {
   text-align: center;
@@ -211,3 +222,126 @@ a:focus-visible {
 .p-sm { padding: var(--spacing-sm); }
 .p-md { padding: var(--spacing-md); }
 .p-lg { padding: var(--spacing-lg); }
+
+/* ==========================================
+   HEADER HIDE ON SCROLL
+   ========================================== */
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
+  border-bottom: 3px solid #1D2A84;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(29, 42, 132, 0.12);
+  transition: all 0.3s ease;
+  max-height: 200px;
+  overflow: hidden;
+}
+
+/* État "réduit" du header */
+header.hide {
+  padding: 0.75rem 2rem;
+  max-height: 60px;
+}
+
+header.hide > div {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+header.hide .header-info h1,
+header.hide .header-info p,
+header.hide .header-buttons {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Logo visible même en mode réduit */
+header.hide .header-logo {
+  opacity: 1;
+}
+
+header.hide {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+}
+
+/* ==========================================
+   MESSAGES & INPUT STYLES
+   ========================================== */
+
+.message {
+  display: flex;
+  animation: slideInUp 0.3s ease;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+.message.sent {
+  justify-content: flex-end;
+}
+
+.message.received {
+  justify-content: flex-start;
+}
+
+.message-content {
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  line-height: 1.5;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(29, 42, 132, 0.08);
+  transition: all 0.3s ease;
+}
+
+.message.sent .message-content {
+  background: linear-gradient(135deg, var(--color-bleu) 0%, #2D3A94 100%);
+  color: white;
+}
+
+.message.sent .message-content:hover {
+  box-shadow: 0 4px 8px rgba(29, 42, 132, 0.2);
+  transform: translateY(-1px);
+}
+
+.message.received .message-content {
+  background: white;
+  color: var(--color-gray-dark);
+  border-left: 4px solid var(--color-vert);
+}
+
+.message.received .message-content:hover {
+  box-shadow: 0 4px 8px rgba(29, 42, 132, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Loading indicator */
+.message.loading .message-content {
+  background: white;
+  color: var(--color-bleu);
+  border-left: 4px solid var(--color-jaune);
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.message.loading .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-jaune);
+  animation: pulse 1.5s infinite;
+}
+
+.message.loading .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.message.loading .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
